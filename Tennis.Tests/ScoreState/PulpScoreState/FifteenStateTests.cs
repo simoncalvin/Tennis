@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Olf.TechEx.Tennis.ScoreState;
@@ -9,22 +10,53 @@ namespace Olf.TechEx.Tennis.Tests.ScoreState.PulpScoreState
     [TestClass]
     public class FifteenStateTests
     {
-        private IPulpScoreState _thirtyState;
-        private FifteenState _target;
+        private Mock<Func<Player, IPulpScoreState>> _thirtyStateFactory;
+        private MockRepository _repo;
+        private Func<Player, FifteenState> _targetFactory;
 
         [TestInitialize]
         public void BeforeEach()
         {
-            _thirtyState = new Mock<IPulpScoreState>(MockBehavior.Strict).Object;
-            _target = new FifteenState(_thirtyState);
+            _repo = new MockRepository(MockBehavior.Strict);
+
+            _thirtyStateFactory = _repo.Create<Func<Player, IPulpScoreState>>();
+            _targetFactory = p => new FifteenState(p, _thirtyStateFactory.Object);
         }
 
         [TestMethod]
-        public void Point_ReturnsThirtyState()
+        public void Point_InitWithFrank_ReturnsThirtyStateForFrank()
         {
-            var actual = _target.Point();
+            var expected = _repo.OneOf<IPulpScoreState>();
 
-            Assert.AreEqual(_thirtyState, actual);
+            _thirtyStateFactory.Setup(x => x(Player.Frank)).Returns(expected);
+
+            var actual = _targetFactory(Player.Frank).Point();
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void Point_InitWithLola_ReturnsThirtyStateForLola()
+        {
+            var expected = _repo.OneOf<IPulpScoreState>();
+
+            _thirtyStateFactory.Setup(x => x(Player.Lola)).Returns(expected);
+
+            var actual = _targetFactory(Player.Lola).Point();
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void Player_InitWithFrank_ReturnsFrank()
+        {
+            Assert.AreEqual(Player.Frank, _targetFactory(Player.Frank).Player);
+        }
+
+        [TestMethod]
+        public void Player_InitWithLola_ReturnsLola()
+        {
+            Assert.AreEqual(Player.Lola, _targetFactory(Player.Lola).Player);
         }
 
         [TestMethod]
@@ -32,7 +64,7 @@ namespace Olf.TechEx.Tennis.Tests.ScoreState.PulpScoreState
         {
             const string expected = "Fifteen";
 
-            var actual = _target.ToString();
+            var actual = _targetFactory(Player.Frank).ToString();
 
             Assert.AreEqual(expected, actual);
         }

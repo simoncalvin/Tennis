@@ -4,16 +4,19 @@ namespace Olf.TechEx.Tennis.ScoreState.PulpScoreState
 {
     internal class ThirtyState : IPulpScoreState
     {
-        private readonly IPulpScoreState _fortyState;
+        private readonly Func<Player, IPulpScoreState> _fortyStateFactory;
+        
+        public Player Player { get; private set; }
 
-        public ThirtyState(IPulpScoreState fortyState)
+        public ThirtyState(Player player, Func<Player, IPulpScoreState> fortyStateFactory)
         {
-            _fortyState = fortyState;
+            Player = player;
+            _fortyStateFactory = fortyStateFactory;
         }
 
         public IState Point()
         {
-            return _fortyState;
+            return _fortyStateFactory(Player);
         }
 
         public override string ToString()

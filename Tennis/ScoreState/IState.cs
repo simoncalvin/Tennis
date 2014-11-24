@@ -12,6 +12,7 @@
 
     internal interface IPulpScoreState : IState
     {
+        Player Player { get; }
         IState Point();
     }
 }

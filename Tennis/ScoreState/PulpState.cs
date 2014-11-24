@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using Olf.TechEx.Tennis.ScoreState.PulpScoreState;
 
 namespace Olf.TechEx.Tennis.ScoreState
@@ -9,17 +10,12 @@ namespace Olf.TechEx.Tennis.ScoreState
     {
         private readonly IScoreState _deuceState;
 
-        private readonly Dictionary<Player, IPulpScoreState> _states = new Dictionary<Player, IPulpScoreState>
-        {
-            {Player.Frank, null},
-            {Player.Lola, null}
-        };
+        private readonly IDictionary<Player, IPulpScoreState> _states;
 
-        public PulpState(Player player, IPulpScoreState fifteenState, IPulpScoreState pulpLoveState, IScoreState deuceState)
+        public PulpState(Player player, Func<Player, IPulpScoreState> fifteenState, Func<Player, IPulpScoreState> pulpLoveState, IScoreState deuceState)
         {
-            _states[player] = fifteenState;
-            _states[GetOtherPlayer(player)] = pulpLoveState;
-            
+            _states = new[] {fifteenState(player), pulpLoveState(GetOtherPlayer(player))}.ToDictionary(x=>x.Player);
+           
             _deuceState = deuceState;
         }
 
@@ -29,7 +25,7 @@ namespace Olf.TechEx.Tennis.ScoreState
 
             if (state is IScoreState)
                 return state as IScoreState;
-
+            
             _states[player] = state as IPulpScoreState;
 
             if (_states.All(x => x.Value is FortyState))

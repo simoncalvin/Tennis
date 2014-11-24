@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Olf.TechEx.Tennis.ScoreState;
 using Olf.TechEx.Tennis.ScoreState.PulpScoreState;
@@ -8,23 +9,30 @@ namespace Olf.TechEx.Tennis.Tests.ScoreState.PulpScoreState
     [TestClass]
     public class FortyStateTests
     {
-        private IScoreState _winState;
+        private MockRepository _repo;
+        private Mock<Func<Player, IScoreState>> _winStateFactory;
         private FortyState _target;
 
         [TestInitialize]
         public void BeforeEach()
         {
-            _winState = new Mock<IScoreState>(MockBehavior.Strict).Object;
+            _repo = new MockRepository(MockBehavior.Strict);
 
-            _target = new FortyState(_winState);
+            _winStateFactory = _repo.Create<Func<Player, IScoreState>>();
+
+            _target = new FortyState(Player.Frank, _winStateFactory.Object);
         }
 
         [TestMethod]
-        public void Point_ReturnsFortyState()
+        public void Point_ReturnsWinState()
         {
+            var winState = _repo.Create<IScoreState>().Object;
+
+            _winStateFactory.Setup(x => x(Player.Frank)).Returns(winState);
+
             var actual = _target.Point();
 
-            Assert.AreEqual(_winState, actual);
+            Assert.AreEqual(winState, actual);
         }
 
         [TestMethod]
